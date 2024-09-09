@@ -1,0 +1,1294 @@
+[
+    {
+        "id": "273e9ee82f847b63",
+        "type": "tab",
+        "label": "Airmaster + ATV630 (132Kw)",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2045697685fcea91",
+        "type": "inject",
+        "z": "273e9ee82f847b63",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "0.5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "3",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 40,
+        "wires": [
+            [
+                "bac9069033e61899"
+            ]
+        ]
+    },
+    {
+        "id": "f9762b4d12f9abbb",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "Realiza query",
+        "func": "// Convierte el arreglo en una cadena separada por comas\nvar valores = msg.payload.join(\", \");\nvar condicion = context.global.get(\"conexionPostgres\");\nvar query;\nvar query2;\nvar destino;\n//var dt = new Date().toISOString(); // Obtener la fecha y hora actual en formato ISO\n// Crea la cadena de consulta con los campos de fecha y hora separados\n\n\n\n\nif(condicion==true){\n    query = \"INSERT INTO dva_aceite (presion_carga, presion_descarga, presion_linea, temp_unidad, corriente_motor, corriente_electro, rpm, fecha) VALUES (\" + valores + \", now())\";\n    destino = 1;\n}else{\n    query2 = \"INSERT INTO tlmy_excepcion (pres_carga, pres_descarga, pres_linea, temp_unidad, corriente_motor, corriente_electro) VALUES (\" + valores + \")\";\n    destino = 2;\n};\n\nlet mensaje = {\n    payload: query,\n    topic: query2,\n    parts: {\n        index: destino \n    }\n};\nreturn mensaje;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1500,
+        "y": 340,
+        "wires": [
+            [
+                "daba7aaf7afdbfc2",
+                "e6364b1c5e821e42"
+            ]
+        ]
+    },
+    {
+        "id": "daba7aaf7afdbfc2",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 90",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1560,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "e6364b1c5e821e42",
+        "type": "delay",
+        "z": "273e9ee82f847b63",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "0.8",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": true,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1710,
+        "y": 340,
+        "wires": [
+            [
+                "b1ed66bb0108753f"
+            ]
+        ]
+    },
+    {
+        "id": "2fae7f2d1061a87c",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "function 6",
+        "func": "// Variable para almacenar los mensajes recibidos\nif (!flow.get('mensajes')) {\n    flow.set('mensajes', []);\n}\n\n// Función para ordenar y enviar el array completo\nfunction ordenarYEnviarArrayCompleto() {\n    const mensajes = flow.get('mensajes');\n\n    // Verificar si se han recibido los 7 mensajes únicos\n    if (mensajes.length === 7 && new Set(mensajes.map(mensaje => mensaje.index)).size === 7) {\n        // Ordenar el array de mensajes por el índice\n        mensajes.sort((a, b) => a.index - b.index);\n\n        // Crear un array con los datos de los mensajes ordenados\n        const arrayCompleto = mensajes.map(mensaje => mensaje.payload);\n\n        // Enviar el mensaje con el array completo\n        msg.payload = arrayCompleto;\n        node.send(msg);\n\n        // Reiniciar el array de mensajes almacenados\n        flow.set('mensajes', []);\n    }\n}\n\n// Procesar cada mensaje entrante\nconst mensajes = flow.get('mensajes');\nconst indice = msg.parts.index;\nconst dato = msg.payload;\n\n// Verificar si el índice no está duplicado\nconst indiceExistente = mensajes.findIndex(mensaje => mensaje.index === indice);\n\nif (indiceExistente === -1) {\n    // Agregar el mensaje al array de mensajes recibidos\n    mensajes.push({ index: indice, payload: dato });\n\n    // Llamar a la función para ordenar y enviar el array completo\n    ordenarYEnviarArrayCompleto();\n}\n\n// No se envía nada hasta que se completen los 14 mensajes únicos\nreturn null;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1280,
+        "y": 340,
+        "wires": [
+            [
+                "8e0aed80ccfbffbf",
+                "f9762b4d12f9abbb"
+            ]
+        ]
+    },
+    {
+        "id": "8e0aed80ccfbffbf",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 100",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1290,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "f2613b9a354e6518",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[1] * 0.001;\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC,\n    parts: {\n        index: 0 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 40,
+        "wires": [
+            [
+                "c531aeaa33039ef8",
+                "c3e8515c3dcfdf31",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "0eab1b39b9b6a25d",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[1] * 0.001;\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC,\n    parts: {\n        index: 1 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 120,
+        "wires": [
+            [
+                "d48c2c4d3540e625",
+                "474a68df72f2c2e7",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "ee607098d1b8b6b2",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[1] * 0.001;\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC,\n    parts: {\n        index: 2 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 200,
+        "wires": [
+            [
+                "c7c144f2f712b85c",
+                "9f3c8d57361608c0",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "7451db0f08eeb15e",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[1] * 0.001;\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC,\n    parts: {\n        index: 3 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 280,
+        "wires": [
+            [
+                "e7cd2854a7bab5cd",
+                "1b4e43186789ac8c",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "5aa7671feb08a525",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[0];\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC*0.1,\n    parts: {\n        index: 4 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 360,
+        "wires": [
+            [
+                "0542acbe1668e210",
+                "9a06be0dcbd4a5b0",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "c3e8515c3dcfdf31",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 83",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "474a68df72f2c2e7",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 84",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "9f3c8d57361608c0",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 85",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "1b4e43186789ac8c",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 86",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "0542acbe1668e210",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 87",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "5e639687f9628b47",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[0];\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC *0.01,\n    parts: {\n        index: 5 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 440,
+        "wires": [
+            [
+                "b424d1e377838d2d",
+                "2fae7f2d1061a87c",
+                "63ebf738417d35e1"
+            ]
+        ]
+    },
+    {
+        "id": "b424d1e377838d2d",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 99",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "8fe57080aaa85e8e",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 101",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 230,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "b1ed66bb0108753f",
+        "type": "switch",
+        "z": "273e9ee82f847b63",
+        "name": "",
+        "property": "parts.index",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "2",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1890,
+        "y": 340,
+        "wires": [
+            [
+                "ccf3e37e56da453b"
+            ],
+            [
+                "53be6adf2b9b6911",
+                "8b32c28af9c8de7a"
+            ]
+        ]
+    },
+    {
+        "id": "53be6adf2b9b6911",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 102",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1870,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "931ce0e04ab9b2ec",
+        "type": "catch",
+        "z": "273e9ee82f847b63",
+        "name": "",
+        "scope": [
+            "7181972d934a6749",
+            "ccf3e37e56da453b"
+        ],
+        "uncaught": false,
+        "x": 150,
+        "y": 340,
+        "wires": [
+            [
+                "8fe57080aaa85e8e",
+                "0def3518d9abdfa6"
+            ]
+        ]
+    },
+    {
+        "id": "0def3518d9abdfa6",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "function 9",
+        "func": "context.global.set(\"conexionPostgres\", false);",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1ddbdfbafde3333a",
+        "type": "inject",
+        "z": "273e9ee82f847b63",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 140,
+        "wires": [
+            [
+                "848429c4806003a9"
+            ]
+        ]
+    },
+    {
+        "id": "848429c4806003a9",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "function 10",
+        "func": "context.global.set (\"conexionPostgres\", true);\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 230,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "bac9069033e61899",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Presion de carga",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "16758",
+        "quantity": "2",
+        "server": "c33df960b93b242e",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 490,
+        "y": 40,
+        "wires": [
+            [
+                "f2613b9a354e6518"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c531aeaa33039ef8",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Presion de descarga",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "16760",
+        "quantity": "2",
+        "server": "c33df960b93b242e",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 500,
+        "y": 120,
+        "wires": [
+            [
+                "0eab1b39b9b6a25d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "d48c2c4d3540e625",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Presion de linea",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "16388",
+        "quantity": "2",
+        "server": "c33df960b93b242e",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 480,
+        "y": 200,
+        "wires": [
+            [
+                "ee607098d1b8b6b2"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c7c144f2f712b85c",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Temperatura unidad",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "16386",
+        "quantity": "2",
+        "server": "c33df960b93b242e",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 500,
+        "y": 280,
+        "wires": [
+            [
+                "7451db0f08eeb15e"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "e7cd2854a7bab5cd",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Corriente motor",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "16395",
+        "quantity": "2",
+        "server": "c33df960b93b242e",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 480,
+        "y": 360,
+        "wires": [
+            [
+                "5aa7671feb08a525"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "9a06be0dcbd4a5b0",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Corriente electro",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "16396",
+        "quantity": "2",
+        "server": "c33df960b93b242e",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 490,
+        "y": 440,
+        "wires": [
+            [
+                "5e639687f9628b47"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "ccf3e37e56da453b",
+        "type": "postgresql",
+        "z": "273e9ee82f847b63",
+        "name": "",
+        "query": "{{msg.payload}}",
+        "postgreSQLConfig": "d7b93c7b513acb18",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 2090,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8b32c28af9c8de7a",
+        "type": "sqlite",
+        "z": "273e9ee82f847b63",
+        "mydb": "5f1f5ca32f9f204a",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "Backup",
+        "x": 2100,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ced13e32d4e809fd",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[0];\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC*0.1,\n    parts: {\n        index: 6 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 580,
+        "wires": [
+            [
+                "749e308b07983bbb",
+                "54101ac4d0c79068",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "2a8e89d12a2c33d7",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 103",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "93f20fc90c2167e5",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[0];\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC,\n    parts: {\n        index: 7 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 680,
+        "wires": [
+            [
+                "2a8e89d12a2c33d7",
+                "1a1e45f86dafdf69",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "7ea43125d67b9620",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 104",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "56646e2f8be3ec92",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorBC = msg.payload[0];\n\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: valorBC,\n    parts: {\n        index: 8 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 760,
+        "wires": [
+            [
+                "7ea43125d67b9620",
+                "9af355aa25b59bb2",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "0ceb689275f654b1",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 105",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "b1890a12d7c2e2a8",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorTM = msg.payload[0];\nlet conversion = ((valorTM*0.001)-4)/0.08;\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: conversion,\n    parts: {\n        index: 9 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 840,
+        "wires": [
+            [
+                "0ceb689275f654b1",
+                "67c6d7a15ba89495",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "eb8932a03dde0412",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 106",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "0e370e7dc60e52f1",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorPVM = msg.payload[0];\nlet conversion = valorPVM;\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: conversion,\n    parts: {\n        index: 10 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 920,
+        "wires": [
+            [
+                "eb8932a03dde0412",
+                "b7c553c35eea91e2",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "368e74f8722b8f4c",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 107",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "86f900bf24514f4c",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorPVM = msg.payload[0];\nlet conversion = valorPVM;\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: conversion,\n    parts: {\n        index: 11 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 1000,
+        "wires": [
+            [
+                "368e74f8722b8f4c",
+                "a889164c5ef7c278",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "b99c96e3c405be66",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 108",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "70f2624a21bd177a",
+        "type": "function",
+        "z": "273e9ee82f847b63",
+        "name": "conversion",
+        "func": "// Recibe el valor a parametrizar\nlet valorPVM = msg.payload[0];\nlet conversion = valorPVM;\n// Crear un mensaje con el resultado\nlet mensaje = {\n    payload: conversion*0.1,\n    parts: {\n        index: 12 // Aquí se define el índice de la función actual\n    }\n};\n\n// Devolver el mensaje\nreturn mensaje;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 1080,
+        "wires": [
+            [
+                "b99c96e3c405be66",
+                "2fae7f2d1061a87c"
+            ]
+        ]
+    },
+    {
+        "id": "63ebf738417d35e1",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Torque motor",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "3205",
+        "quantity": "8",
+        "server": "c791852f3b4f980f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 470,
+        "y": 580,
+        "wires": [
+            [
+                "ced13e32d4e809fd"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "749e308b07983bbb",
+        "type": "debug",
+        "z": "273e9ee82f847b63",
+        "name": "debug 109",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 938,
+        "y": 574,
+        "wires": []
+    },
+    {
+        "id": "54101ac4d0c79068",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Estado termico variador",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "3209",
+        "quantity": "8",
+        "server": "c791852f3b4f980f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 510,
+        "y": 680,
+        "wires": [
+            [
+                "93f20fc90c2167e5"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "1a1e45f86dafdf69",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Estado termico motor",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "9630",
+        "quantity": "8",
+        "server": "c791852f3b4f980f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 500,
+        "y": 760,
+        "wires": [
+            [
+                "56646e2f8be3ec92"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "9af355aa25b59bb2",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Temperatura motor",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "5244",
+        "quantity": "8",
+        "server": "c791852f3b4f980f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 490,
+        "y": 840,
+        "wires": [
+            [
+                "b1890a12d7c2e2a8"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "67c6d7a15ba89495",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Potencia variador (motor)",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "3211",
+        "quantity": "8",
+        "server": "c791852f3b4f980f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 510,
+        "y": 920,
+        "wires": [
+            [
+                "0e370e7dc60e52f1"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "b7c553c35eea91e2",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Velocidad variador (motor)",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "12004",
+        "quantity": "8",
+        "server": "c791852f3b4f980f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 520,
+        "y": 1000,
+        "wires": [
+            [
+                "86f900bf24514f4c"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a889164c5ef7c278",
+        "type": "modbus-getter",
+        "z": "273e9ee82f847b63",
+        "name": "Corriente motor",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "logIOActivities": false,
+        "unitid": "1",
+        "dataType": "HoldingRegister",
+        "adr": "3204",
+        "quantity": "8",
+        "server": "c791852f3b4f980f",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 480,
+        "y": 1080,
+        "wires": [
+            [
+                "70f2624a21bd177a"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c33df960b93b242e",
+        "type": "modbus-client",
+        "name": "AirMaster",
+        "clienttype": "serial",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "127.0.0.1",
+        "tcpPort": "502",
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB0",
+        "serialType": "RTU",
+        "serialBaudrate": "9600",
+        "serialDatabits": "8",
+        "serialStopbits": "1",
+        "serialParity": "none",
+        "serialConnectionDelay": "250",
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": "",
+        "commandDelay": "1",
+        "clientTimeout": "1000",
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": "1000",
+        "parallelUnitIdsAllowed": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "d7b93c7b513acb18",
+        "type": "postgreSQLConfig",
+        "name": "",
+        "host": "175.10.0.124",
+        "hostFieldType": "str",
+        "port": "5432",
+        "portFieldType": "num",
+        "database": "soporte_db",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": "10",
+        "maxFieldType": "num",
+        "idle": "1000",
+        "idleFieldType": "num",
+        "connectionTimeout": "10000",
+        "connectionTimeoutFieldType": "num",
+        "user": "soporte",
+        "userFieldType": "str",
+        "password": "soporte2768",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "5f1f5ca32f9f204a",
+        "type": "sqlitedb",
+        "db": "/home/backup.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "c791852f3b4f980f",
+        "type": "modbus-client",
+        "name": "ATV630",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "175.10.0.183",
+        "tcpPort": "502",
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "9600",
+        "serialDatabits": "8",
+        "serialStopbits": "1",
+        "serialParity": "none",
+        "serialConnectionDelay": "100",
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 1000,
+        "parallelUnitIdsAllowed": true,
+        "showWarnings": true,
+        "showLogs": true
+    }
+]
