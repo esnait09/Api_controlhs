@@ -1,7 +1,11 @@
 const express = require('express');
-const router = express.Router();
-const loginController = require('../controllers/loginController');
+const app = express();
+const loginRoutes = require('./routes/loginRoutes'); // Importa el archivo de rutas
 
-router.post('/login', loginController.login);
+app.use(express.json()); // Para manejar JSON en las solicitudes
+app.use('/api', loginRoutes); // Define el prefijo de la ruta
 
-module.exports = router;
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});

@@ -1,30 +1,29 @@
 const express = require('express');
 const app = express();
-const loginRoutes = require('./routes/loginRoutes');
-const machineRoutes = require('./routes/machineRoutes');
-require('dotenv').config();
+const loginRoutes = require('./routes/loginRoutes');  // Rutas para el login
+const machineRoutes = require('./routes/machineRoutes');  // Rutas para las máquinas
+require('dotenv').config();  // Cargar variables de entorno desde .env
 
-app.use(express.json()); // Middleware para parsear JSON
+app.use(express.json()); // Middleware para parsear JSON en las solicitudes
 
 // Middleware para configurar CORS
 app.use((req, res, next) => {
-let validIps = ['::ffff:175.10.0.174', '::ffff:175.10.0.207']
-
-console.log(req.headers.origin)
-
-if(validIps.includes(req.socket.remoteAddress)){
+    // Permitir solicitudes desde cualquier origen
     res.header('Access-Control-Allow-Origin', '*');
-} else {
-    const err = new Error('IP NO RECONOCIDA' + req.socket.remoteAddress)
-}
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
-res.header('Access-Control-Allow-Methods', 'GET, POST')
-res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    // Manejar preflight requests (OPTIONS)
+    if (req.method === 'OPTIONS') {
+        return res.status(204).end(); // No Content para OPTIONS
+    }
 
-next();
-})
+    next();  // Continuar con la siguiente función de middleware
+});
+
 // Rutas
-app.use('/api', loginRoutes);
-app.use('/api', machineRoutes);
+app.use('/api/login', loginRoutes);  // Ruta para login
+app.use('/api/machines', machineRoutes);  // Ruta para machines
 
+// Exportar la app para usar en otros archivos (ej: server.js)
 module.exports = app;
